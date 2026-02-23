@@ -3,8 +3,9 @@
 A polished single-page security console with:
 
 - Advanced authentication interface (login + sign up).
-- Simulated antivirus deep scan engine with real-time progress.
-- Security logs, threat metrics, and module dashboard.
+- Advanced antivirus protection layers (real-time shield, ransomware rollback, web phishing defense, adaptive firewall, USB lockdown, zero-day AI behavior checks).
+- Simulated deep scan engine with real-time progress and threat response logs.
+- Security logs, threat metrics, hardening actions, and module dashboard.
 - Windows launcher and installer support files.
 
 ## Run locally
