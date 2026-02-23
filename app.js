@@ -7,10 +7,13 @@ const logList = document.getElementById('log-list');
 const runScanButton = document.getElementById('run-scan');
 const progressBar = document.getElementById('scan-progress');
 const protectionGrid = document.getElementById('protection-grid');
+const controlGrid = document.getElementById('control-grid');
+const restoreControlButton = document.getElementById('restore-control');
 
 const USERS_KEY = 'safediscover_users';
 const SESSION_KEY = 'safediscover_session';
 const PROTECTIONS_KEY = 'safediscover_protections';
+const CONTROLS_KEY = 'safediscover_controls';
 
 const protectionCatalog = [
   {
@@ -51,27 +54,72 @@ const protectionCatalog = [
   },
 ];
 
+const antiControlCatalog = [
+  {
+    id: 'anti-blackout',
+    title: 'Anti-Blackout Continuity Shield',
+    detail: 'Protects UI and service availability by auto-restoring display/control channels.',
+    state: 'active',
+  },
+  {
+    id: 'anti-remote',
+    title: 'Anti-Control Access Lock',
+    detail: 'Blocks unauthorized remote control sessions and unknown admin handshakes.',
+    state: 'active',
+  },
+  {
+    id: 'anti-privilege',
+    title: 'Privilege Takeover Guard',
+    detail: 'Prevents elevation abuse and unauthorized policy ownership changes.',
+    state: 'monitoring',
+  },
+  {
+    id: 'anti-disable',
+    title: 'Service Disable Protection',
+    detail: 'Stops attempts to disable AV services, scans, and tamper settings.',
+    state: 'active',
+  },
+  {
+    id: 'anti-lockout',
+    title: 'Admin Lockout Recovery',
+    detail: 'Recovers secure admin access if hostile actions lock legitimate operators out.',
+    state: 'monitoring',
+  },
+  {
+    id: 'anti-policy-hijack',
+    title: 'Policy Hijack Firewall',
+    detail: 'Rejects untrusted config pushes and restores signed golden policy baseline.',
+    state: 'active',
+  },
+];
+
 const systemState = {
   threats: 0,
   health: 98,
-  protections: loadProtections(),
+  control: 99,
+  protections: loadRecords(PROTECTIONS_KEY, protectionCatalog),
+  controls: loadRecords(CONTROLS_KEY, antiControlCatalog),
 };
 
 const hash = (text) => btoa(unescape(encodeURIComponent(text)));
 
-function loadProtections() {
-  const persisted = localStorage.getItem(PROTECTIONS_KEY);
+function loadRecords(storageKey, defaults) {
+  const persisted = localStorage.getItem(storageKey);
   if (!persisted) {
-    return protectionCatalog;
+    return defaults;
   }
+
   const safe = JSON.parse(persisted);
-  return protectionCatalog.map((item) => safe.find((entry) => entry.id === item.id) || item);
+  return defaults.map((item) => safe.find((entry) => entry.id === item.id) || item);
 }
 
 const getUsers = () => JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
 const setUsers = (users) => localStorage.setItem(USERS_KEY, JSON.stringify(users));
-const saveProtections = () =>
+
+const saveState = () => {
   localStorage.setItem(PROTECTIONS_KEY, JSON.stringify(systemState.protections));
+  localStorage.setItem(CONTROLS_KEY, JSON.stringify(systemState.controls));
+};
 
 const setStatus = (message, ok = false) => {
   authStatus.textContent = message;
@@ -97,12 +145,12 @@ const pushLog = (message) => {
 const setDashboardValues = () => {
   document.getElementById('threat-count').textContent = systemState.threats;
   document.getElementById('health-score').textContent = `${systemState.health}%`;
-  document.getElementById('last-scan').textContent = new Date().toLocaleTimeString();
+  document.getElementById('control-score').textContent = `${systemState.control}%`;
 };
 
-const renderProtections = () => {
-  protectionGrid.innerHTML = '';
-  systemState.protections.forEach((item) => {
+const renderCards = (container, records, actionLabel, actionAttr) => {
+  container.innerHTML = '';
+  records.forEach((item) => {
     const node = document.createElement('article');
     node.className = 'protection-item';
     node.innerHTML = `
@@ -113,10 +161,15 @@ const renderProtections = () => {
         </div>
         <span class="badge ${item.state}">${item.state.toUpperCase()}</span>
       </div>
-      <button class="mini" data-protection-id="${item.id}">Harden</button>
+      <button class="mini" ${actionAttr}="${item.id}">${actionLabel}</button>
     `;
-    protectionGrid.append(node);
+    container.append(node);
   });
+};
+
+const renderPanels = () => {
+  renderCards(protectionGrid, systemState.protections, 'Harden', 'data-protection-id');
+  renderCards(controlGrid, systemState.controls, 'Fortify', 'data-control-id');
 };
 
 protectionGrid.addEventListener('click', (event) => {
@@ -132,16 +185,46 @@ protectionGrid.addEventListener('click', (event) => {
 
   found.state = 'active';
   systemState.health = Math.min(100, systemState.health + 1);
-  saveProtections();
+  saveState();
   setDashboardValues();
-  renderProtections();
+  renderPanels();
   pushLog(`${found.title} policy hardened and moved to active enforcement.`);
+});
+
+controlGrid.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-control-id]');
+  if (!button) {
+    return;
+  }
+
+  const found = systemState.controls.find((item) => item.id === button.dataset.controlId);
+  if (!found) {
+    return;
+  }
+
+  found.state = 'active';
+  systemState.control = Math.min(100, systemState.control + 2);
+  systemState.health = Math.min(100, systemState.health + 1);
+  saveState();
+  setDashboardValues();
+  renderPanels();
+  pushLog(`${found.title} fortified. Anti-control resilience now actively enforced.`);
+});
+
+restoreControlButton.addEventListener('click', () => {
+  systemState.controls = antiControlCatalog.map((item) => ({ ...item, state: 'active' }));
+  systemState.control = 100;
+  systemState.health = Math.min(100, systemState.health + 2);
+  saveState();
+  setDashboardValues();
+  renderPanels();
+  pushLog('Control plane restoration complete. Anti-blackout and anti-access controls are locked.');
 });
 
 const showDashboard = (email) => {
   authPanel.classList.remove('active');
   dashboardPanel.classList.add('active');
-  renderProtections();
+  renderPanels();
   pushLog(`Operator ${email} authenticated with hardened profile.`);
   pushLog('Real-time shield initialized and cloud reputation stream connected.');
 };
@@ -195,35 +278,41 @@ document.getElementById('login-form').addEventListener('submit', (event) => {
 
 runScanButton.addEventListener('click', () => {
   runScanButton.disabled = true;
-  pushLog('Deep scan started: static, heuristic, and behavior phases queued.');
+  pushLog('Deep scan started: static, heuristic, behavior, and anti-control phases queued.');
   let progress = 0;
 
   const timer = setInterval(() => {
     progress += Math.floor(Math.random() * 14) + 8;
     progressBar.style.width = `${Math.min(progress, 100)}%`;
 
-    if (progress > 28 && progress < 36) {
-      pushLog('Ransomware rollback guard engaged for rapid file shadowing.');
+    if (progress > 24 && progress < 34) {
+      pushLog('Anti-blackout continuity shield verified display/control channel persistence.');
     }
 
-    if (progress > 40 && progress < 46) {
-      pushLog('Kernel integrity policy blocked unsigned driver chain.');
+    if (progress > 38 && progress < 46) {
+      pushLog('Anti-control access lock rejected unauthorized remote operator token.');
     }
 
-    if (progress > 65 && progress < 72) {
-      pushLog('Zero-day behavior AI flagged entropy spike in script host.');
+    if (progress > 54 && progress < 62) {
+      pushLog('Privilege takeover guard blocked unsigned elevation chain.');
+    }
+
+    if (progress > 72 && progress < 80) {
+      pushLog('Policy hijack firewall restored signed baseline after tamper attempt.');
     }
 
     if (progress >= 100) {
       clearInterval(timer);
       const foundThreats = Math.floor(Math.random() * 4);
+      const controlPressure = Math.floor(Math.random() * 3);
       systemState.threats += foundThreats;
-      systemState.health = Math.max(90, systemState.health - foundThreats);
+      systemState.health = Math.max(89, systemState.health - foundThreats);
+      systemState.control = Math.max(92, systemState.control - controlPressure);
       setDashboardValues();
       pushLog(
         foundThreats
-          ? `${foundThreats} threat(s) quarantined. Memory artifacts isolated and IOC report generated.`
-          : 'Scan complete. No active threats found. Signature graph synchronized.'
+          ? `${foundThreats} threat(s) quarantined. Control-plane takeover vectors neutralized.`
+          : 'Scan complete. No active threats found. Anti-control envelope stable.'
       );
       runScanButton.disabled = false;
       setTimeout(() => {

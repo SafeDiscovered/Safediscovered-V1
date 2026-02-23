@@ -72,7 +72,10 @@
             <p class="muted">Protection Suite</p>
             <h2>Threat Intelligence Command Center</h2>
           </div>
-          <button id="sign-out" class="ghost">Sign out</button>
+          <div class="header-actions">
+            <button id="restore-control" class="ghost">Restore Control Plane</button>
+            <button id="sign-out" class="ghost">Sign out</button>
+          </div>
         </header>
 
         <div class="layout">
@@ -84,6 +87,7 @@
               <li>Cloud Reputation</li>
               <li>Firewall Orchestration</li>
               <li>Ransomware Guard</li>
+              <li>Anti-Control Resilience</li>
             </ul>
           </aside>
 
@@ -100,9 +104,9 @@
                 <small>Last 24 hours</small>
               </article>
               <article class="card">
-                <h4>Last Full Scan</h4>
-                <p id="last-scan" class="metric">Never</p>
-                <small>Recommended every 4 hours</small>
+                <h4>Control Integrity</h4>
+                <p id="control-score" class="metric">99%</p>
+                <small>Anti-takeover integrity index</small>
               </article>
             </div>
 
@@ -114,10 +118,18 @@
               <div class="protection-grid" id="protection-grid"></div>
             </section>
 
+            <section class="protections anti-control-panel">
+              <div class="protection-header">
+                <h3>Anti-Control Resilience</h3>
+                <p>Anti-blackout, anti-unauthorized control access, and admin lock protection.</p>
+              </div>
+              <div class="protection-grid" id="control-grid"></div>
+            </section>
+
             <div class="scan-console">
               <div>
                 <h3>Advanced Antivirus Engine</h3>
-                <p>Hybrid static + behavioral scanning with isolation sandbox emulation.</p>
+                <p>Hybrid static + behavioral scanning with control-plane tamper resistance.</p>
               </div>
               <button id="run-scan" class="btn">Run Deep Scan</button>
             </div>

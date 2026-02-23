@@ -4,6 +4,7 @@ A polished single-page security console with:
 
 - Advanced authentication interface (login + sign up).
 - Advanced antivirus protection layers (real-time shield, ransomware rollback, web phishing defense, adaptive firewall, USB lockdown, zero-day AI behavior checks).
+- Anti-control resilience stack (anti-blackout continuity, anti-unauthorized control access, privilege takeover guard, service disable protection, admin lockout recovery, policy hijack firewall).
 - Simulated deep scan engine with real-time progress and threat response logs.
 - Security logs, threat metrics, hardening actions, and module dashboard.
 - Windows launcher and installer support files.

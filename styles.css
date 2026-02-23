@@ -191,6 +191,12 @@ input {
   margin-bottom: 1rem;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
 .layout {
   display: grid;
   grid-template-columns: 230px 1fr;
@@ -243,6 +249,11 @@ input {
   border: 1px solid rgba(146, 169, 229, 0.2);
   border-radius: 14px;
   padding: 1rem;
+}
+
+.anti-control-panel {
+  border-color: rgba(255, 204, 106, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(255, 204, 106, 0.08);
 }
 
 .metric {
@@ -362,8 +373,13 @@ input {
   }
 
   .scan-console,
-  .protection-header {
+  .protection-header,
+  .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
   }
 }
