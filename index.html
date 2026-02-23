@@ -126,6 +126,9 @@
         border-left: 2px solid var(--good); background: rgba(17, 29, 58, 0.75);
         padding: 0.55rem 0.65rem; border-radius: 0 8px 8px 0; font-size: 0.88rem;
       }
+
+      .native-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.65rem; margin-top: 0.8rem; }
+      .native-status { margin-top: 0.6rem; color: var(--muted); font-size: 0.84rem; min-height: 1.2rem; }
       @media (max-width: 1100px) {
         .cards,.protection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
@@ -240,6 +243,20 @@
               <button id="run-scan" class="btn">Run Deep Scan</button>
             </div>
 
+            <section class="protections">
+              <div class="protection-header">
+                <h3>Windows Native Protection Controls</h3>
+                <p>When opened in desktop app, this runs Defender/Firewall hardening tasks.</p>
+              </div>
+              <div class="native-actions">
+                <button class="ghost" id="native-defender-status">Read Defender Status</button>
+                <button class="ghost" id="native-quick-scan">Launch Quick Scan</button>
+                <button class="ghost" id="native-firewall-status">Read Firewall Status</button>
+                <button class="ghost" id="native-enable-firewall">Enable Firewall Profiles</button>
+              </div>
+              <p id="native-status" class="native-status">Desktop bridge inactive in browser mode.</p>
+            </section>
+
             <div class="progress-wrap"><div id="scan-progress" class="progress"></div></div>
 
             <section class="logs">
@@ -266,6 +283,7 @@
       const protectionGrid = document.getElementById('protection-grid');
       const controlGrid = document.getElementById('control-grid');
       const restoreControlButton = document.getElementById('restore-control');
+      const nativeStatus = document.getElementById('native-status');
 
       const USERS_KEY = 'safediscover_users';
       const SESSION_KEY = 'safediscover_session';
@@ -317,6 +335,25 @@
       const setStatus = (message, ok = false) => {
         authStatus.textContent = message;
         authStatus.style.color = ok ? '#78f0c4' : '#ffc268';
+      };
+
+
+      const nativeBridge = {
+        available: !!(window.chrome && window.chrome.webview),
+        request(command) {
+          if (!this.available) {
+            nativeStatus.textContent = 'Native desktop bridge unavailable. Run in SafeDiscoverDesktop on Windows.';
+            return;
+          }
+          nativeStatus.textContent = `Running ${command}...`;
+          window.chrome.webview.postMessage({ command });
+        },
+      };
+
+      window.nativeResult = (payload) => {
+        const state = payload.ok ? 'SUCCESS' : 'FAILED';
+        nativeStatus.textContent = `[${state}] ${payload.command}: ${payload.message}`;
+        pushLog(`Native action ${payload.command} => ${state}`);
       };
 
       tabs.forEach((tab) => {
@@ -397,6 +434,7 @@
         setDashboardValues();
         renderPanels();
         pushLog('Control plane restoration complete. Anti-blackout and anti-access controls are locked.');
+        nativeBridge.request('restoreSystem');
       });
 
       const showDashboard = (email) => {
@@ -479,6 +517,12 @@
           }
         }, 250);
       });
+
+
+      document.getElementById('native-defender-status').addEventListener('click', () => nativeBridge.request('defenderStatus'));
+      document.getElementById('native-quick-scan').addEventListener('click', () => nativeBridge.request('quickScan'));
+      document.getElementById('native-firewall-status').addEventListener('click', () => nativeBridge.request('firewallStatus'));
+      document.getElementById('native-enable-firewall').addEventListener('click', () => nativeBridge.request('enableFirewall'));
 
       document.getElementById('clear-logs').addEventListener('click', () => {
         logList.innerHTML = '';

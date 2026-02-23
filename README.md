@@ -1,25 +1,43 @@
 # SafeDiscover Defender Suite
 
-This repository now ships as a **single application file**.
+SafeDiscover is now a real **Windows desktop app shell** around the single-file `index.html` using **WebView2 + .NET 8**.
 
-## Primary file (first page app file)
+## What is included
 
-- `index.html` → contains all HTML, CSS, and JavaScript combined in one application file.
+- `index.html` (single-file app UI + logic).
+- `windows/SafeDiscoverDesktop/` desktop host project.
+- Native protection actions (when running desktop host on Windows):
+  - Read Microsoft Defender status.
+  - Trigger Defender quick scan.
+  - Read Windows Firewall profile status.
+  - Enable firewall profiles.
 
-## Put `index.html` on your GitHub code page (downloadable)
+> Note: true kernel-level or EDR-grade protection requires signed drivers and enterprise backend services. This project provides a secure desktop control surface + native Windows Defender/Firewall orchestration.
 
-1. Create a GitHub repository (or use an existing one).
-2. Upload/push this project so `index.html` is in the repository root.
-3. Anyone can then download it from GitHub in either way:
-   - Open the file in the repo and click **Download raw file**.
-   - Use the direct raw URL pattern:
-     - `https://raw.githubusercontent.com/<owner>/<repo>/<branch>/index.html`
-4. Optional: enable GitHub Pages for a live URL from the same file.
-
-## Run locally
+## Run web mode (UI only)
 
 ```bash
 python3 -m http.server 8181
 ```
 
 Open <http://localhost:8181>.
+
+## Build and run Windows desktop app
+
+Requirements:
+- Windows 10/11
+- .NET 8 SDK
+- WebView2 runtime
+
+Commands (from repo root in PowerShell):
+
+```powershell
+dotnet restore .\windows\SafeDiscoverDesktop\SafeDiscoverDesktop.csproj
+dotnet run --project .\windows\SafeDiscoverDesktop\SafeDiscoverDesktop.csproj
+```
+
+To publish a distributable build:
+
+```powershell
+dotnet publish .\windows\SafeDiscoverDesktop\SafeDiscoverDesktop.csproj -c Release -r win-x64 --self-contained false
+```
